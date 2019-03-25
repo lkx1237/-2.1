@@ -1,0 +1,133 @@
+import random
+from fractions import Fraction
+import profile
+
+class EleArithmetic():
+    def __init__(self,):
+        self.op = ['+', '-', '×', '÷', '/']
+        self.quest = ''
+#随机生成一个算式
+    def get_string(self):
+        self.lens = random.randint(2, 9)
+        self.teop = ''
+        self.tstr = []
+        for i in range(self.lens):
+            if self.teop == '÷':
+                self.tint = random.randint(1, 8)
+                self.teop = random.choice(self.op)
+            elif self.teop == '/':
+                self.tint = random.randint(self.tint+1, 9)
+                self.teop = random.choice(self.op[:-1])
+            else:
+                self.tint = random.randint(0, 8)
+                self.teop = random.choice(self.op)
+            self.tstr.append(str(self.tint))
+            self.tstr.append(self.teop)
+        self.tstr[-1] = '='
+        self.tstr = ''.join(self.tstr)
+        self.quest = self.tstr
+        return self.tstr
+
+    def get_ans(self, quest):
+        rpn = self.to_rpn(quest[:-1])
+        the_ans = self.slove_rpn(rpn)
+        print('问题如下:', self.quest)
+        my_ans = input()
+        print('结果为', str(the_ans))
+
+        if str(the_ans) == my_ans :
+            print('right!')
+            return True
+        else:
+            print('wrong...')
+            return False
+#将随机生成转换为RPN
+    def to_rpn(self, ques):  #Reverse Polish notation
+        self.stack = []
+        s = ''
+        for x in ques:
+            if x != '+' and x != '-' and x != '×' and x != '÷' and x != '/':
+                s += x  #若为数字，直接输出
+            else:  # 若为运算符，进栈
+                if not self.stack:  #栈空
+                    self.stack.append(x)
+                else:
+                    if self.this_bigger(x, self.stack[-1]):  #运算级高于栈顶元素
+                        self.stack.append(x)  #直接进栈
+                    else:
+                        while self.stack:
+                            if self.this_bigger(x, self.stack[-1]):
+                                break
+                            s += self.stack.pop()
+                        self.stack.append(x)
+        while self.stack:
+            s += self.stack.pop()
+        # print('在to_rpn函数中，rpn：',s)
+        return s
+
+    def this_bigger(self, this, last):
+        #当前优先级更高
+        if (this == '×' or this == '÷' or this == '/') and (last == '+' or last == '-'):
+            return True
+        else:
+            return False
+#将后续表达式计算出来
+    def slove_rpn(self, rpn):
+        #print('进入slove_rpn函数：')
+        self.stack1 = []  #用于保存运算数
+        for x in rpn:
+            if x != '+' and x != '-' and x != '×' and x != '÷' and x != '/':
+                self.stack1.append(int(x))
+            elif x == '+':
+                second = self.stack1.pop()
+                first = self.stack1.pop()
+                self.stack1.append(first + second)
+            elif x == '-':
+                second = self.stack1.pop()
+                first = self.stack1.pop()
+                self.stack1.append(first - second)
+            elif x == '×':
+                second = self.stack1.pop()
+                first = self.stack1.pop()
+                self.stack1.append(first * second)
+            elif x == '÷':
+                second = self.stack1.pop()
+                first = self.stack1.pop()
+                self.stack1.append(Fraction(first, second))
+            elif x == '/':
+                second = self.stack1.pop()
+                first = self.stack1.pop()
+                self.stack1.append(Fraction(first, second))
+        resault = self.stack1[0]
+        if resault >= 0:
+            #print('--------------题结束----------------')
+            return resault
+        elif resault < 0:
+            #print('结果为负数!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            s = self.get_string()
+            rpn = self.to_rpn(s[:-1])
+            return self.slove_rpn(rpn)
+
+
+#if __name__ == '__main__':
+def main():
+    n = eval(input('请输入想挑战的数量：'))
+   # print('当前为效能分析阶段，所有的输入都已转变为默认输入。n = 10000')
+   # n = 10000
+    o = EleArithmetic()
+    score = 0
+    print('----------总共%d道题----------' % n)
+    for i in range(n):
+        print('第%d/%d个'%(i+1,n), end='')
+        question = o.get_string()
+        if o.get_ans(question):
+            score += 10
+        print()
+    print('----------最终得分:%d分----------'%score)
+
+if __name__=="__main__":
+    profile.run("main()")
+    #profile.run("get_ans()")
+    #profile.run("to_rpn()")
+   # profile.run("slove_rpn()")
+    
